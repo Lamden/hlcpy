@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from iso8601 import parse_date
 
-
 def synchronized(fn):
     """Synchronization for object methods using self.lock"""
 

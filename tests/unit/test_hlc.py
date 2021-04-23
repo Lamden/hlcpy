@@ -2,6 +2,9 @@ import time
 import pytest
 from hlcpy import HLC
 
+def get_nanoseconds():
+    hlc = HLC()
+    return hlc.get_nanoseconds()
 
 def test_too_large():
     with pytest.raises(ValueError):
@@ -27,7 +30,7 @@ def test_bin():
 
 def test_str():
     h1 = HLC()
-    h1.set_nanos(time.time_ns() + 10e9)
+    h1.set_nanos(get_nanoseconds() + 10e9)
     h2 = HLC.from_str(str(h1))
     assert h2 == h1
 
@@ -41,13 +44,14 @@ def test_str():
 def test_compare():
     h1 = HLC()
     h2 = HLC()
-    h1.set_nanos(time.time_ns() + 10e9)
+    h1.set_nanos(get_nanoseconds() + 10e9)
     assert h2 == h2
     assert h2 < h1
 
 
 def test_sync():
-    future_nanos = time.time_ns() + 10e9
+    future_nanos = get_nanoseconds() + 10e9
+    print(future_nanos)
     h1 = HLC()
     h1.set_nanos(future_nanos)
     h1.sync()
@@ -59,7 +63,7 @@ def test_sync():
 
 
 def test_merge():
-    wall_nanos = time.time_ns()
+    wall_nanos = get_nanoseconds()
     h1 = HLC()
     h1.set_nanos(wall_nanos)
     original_nanos, _ = h1.tuple()

@@ -1,9 +1,7 @@
-from __future__ import annotations
 import threading
 import time
 import math
 from hlcpy.util import synchronized, nanos_to_iso8601, iso8601_to_nanos
-
 
 class HLC:
     n_bits = 64
@@ -21,18 +19,22 @@ class HLC:
         self._set(nanos, logical)
 
     @classmethod
-    def from_now(cls):
-        return cls(nanos=time.time_ns())
+    def get_nanoseconds(cls):
+        return int(time.time() * 1000000000)
 
     @classmethod
-    def from_str(cls, s: str) -> HLC:
+    def from_now(cls):
+        return cls(nanos=cls.get_nanoseconds())
+
+    @classmethod
+    def from_str(cls, s: str):
         spl = s.split('_')
         nanos = iso8601_to_nanos(spl[0])
         logical = int(spl[1]) if len(spl) > 1 else 0
         return cls(nanos, logical)
 
     @classmethod
-    def from_bytes(cls, bs: bytes) -> HLC:
+    def from_bytes(cls, bs: bytes):
         """Bytes repesentation must have 64 bits (8 bytes) in little endian.
         Thier meaning 'from left' (smallest indices):
         5 bits empty (for compatibility), 43 bits for timestamp in millis, 16 bits for the logical.
@@ -45,22 +47,22 @@ class HLC:
         logical = number & cls.logical_mask
         return cls(int(millis * 1e6), logical)
 
-    def to_bytes(self) -> bytes:
+    def to_bytes(self):
         compatibility_part = self.compatibility_mask
         millis_part = self.millis << self.logical_bits
         number = compatibility_part | millis_part | self.logical
         return number.to_bytes(self.n_bytes, byteorder=self.byteorder)
 
     @property
-    def nanos(self) -> int:
+    def nanos(self):
         return self._nanos
 
     @property
-    def millis(self) -> int:
+    def millis(self):
         return math.ceil(self._nanos / 1e6)
 
     @property
-    def logical(self) -> int:
+    def logical(self):
         return self._logical
 
     def set_nanos(self, nanos: int):
@@ -80,16 +82,16 @@ class HLC:
         """Returns a tuple of <nanoseconds since unix epoch, logical clock>"""
         return self.nanos, self.logical
 
-    def __str__(self) -> str:
+    def __str__(self):
         return '{}_{}'.format(nanos_to_iso8601(self.nanos), self.logical)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return 'HLC(nanos={},logical={})'.format(self.nanos, self.logical)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other):
         return self.tuple() == other.tuple()
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other):
         return self.tuple() < other.tuple()
 
     @synchronized
@@ -106,7 +108,7 @@ class HLC:
         self._set(nanos, logical)
 
     @synchronized
-    def merge(self, event: HLC, sync: bool = True):
+    def merge(self, event, sync: bool = True):
         "To be used on receiving an event"
         cnanos, clogical = self.tuple()
         enanos, elogical = event.tuple()
